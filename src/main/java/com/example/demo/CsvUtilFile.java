@@ -3,6 +3,7 @@ package com.example.demo;
 import com.opencsv.CSVReader;
 import com.opencsv.exceptions.CsvException;
 
+import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
 import java.util.ArrayList;
@@ -13,9 +14,9 @@ public class CsvUtilFile {
     private CsvUtilFile(){}
 
     public static List<Player> getPlayers(){
-        var uri =  CsvUtilFile.class.getClassLoader().getResource("data.csv");
+        File archivo = new File("src/main/resources/data.csv");//URL DEL ARCHIVO EN EL COMPUTADOR
         List<Player> list = new ArrayList<>();
-        try (CSVReader reader = new CSVReader(new FileReader(uri.getFile()))) {
+        try (CSVReader reader = new CSVReader(new FileReader(archivo.getAbsolutePath()))) {
             List<String[]> registers = reader.readAll();
             registers.forEach(strings -> list.add(new Player(
                     Integer.parseInt(strings[0].trim()),
@@ -27,8 +28,7 @@ public class CsvUtilFile {
                     Integer.parseInt(strings[6].trim()),
                     strings[7]
             )));
-
-           return list;
+            return list;
 
         } catch (IOException | CsvException e) {
             throw new IllegalArgumentException(e.getMessage());

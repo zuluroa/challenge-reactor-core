@@ -1,19 +1,12 @@
 package com.example.demo;
 
-import com.opencsv.CSVReader;
-import com.opencsv.exceptions.CsvException;
+
 import org.junit.jupiter.api.Test;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
-import java.io.FileReader;
-import java.io.IOException;
 import java.util.*;
-import java.util.function.Consumer;
-import java.util.function.Function;
-import java.util.function.Predicate;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 public class CSVUtilTest {
 
@@ -63,6 +56,34 @@ public class CSVUtilTest {
         assert listFilter.block().size() == 322;
     }
 
+    @Test
+    void reactive_filtrarJugadoresMayoresA34() {
+        List<Player> list = CsvUtilFile.getPlayers();
+        Flux<Player> listFlux = Flux.fromStream(list.parallelStream()).cache();
+        Mono<Map<String, Collection<Player>>> listFilter = listFlux
+                .filter(player -> player.age > 34)
+                .map(player -> {
+                    player.name = player.name.toUpperCase(Locale.ROOT);
+                    return player;
+                })
+                .buffer(100)
+                .flatMap(playerA -> listFlux
+                        .filter(playerB -> playerA.stream()
+                                .anyMatch(a -> a.club.equals(playerB.club)))
+                )
+                .distinct()
+                .collectMultimap(Player::getClub);
+        assert listFilter.block().size() == 322;
+    }
 
+    @Test
+    void reactive_filtrasRankinNacioanalidad() {
+        List<Player> list = CsvUtilFile.getPlayers();
+        Flux<Player> listFlux = Flux.fromStream(list.parallelStream()).cache();
+         listFlux
+                .sort((player1, player2) -> Math.max(player1.winners, player2.winners))
+                .distinct()
+                .collectMultimap(Player::getNational);
+    }
 
 }
